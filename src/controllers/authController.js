@@ -2,6 +2,7 @@ import config from '../../config';
 import * as errMsg from "../common/errMsg";
 import crypticServices from '../services/crypticServices';
 import userModelServices from '../services/userModelServices';
+import { USERID } from '../common/variables';
 
 export const get_register = (req, res, next) => res.render("register");
 export const get_signin = async (req, res, next) => res.render("signin");
@@ -33,7 +34,7 @@ export const post_signin = async (req, res, next) => {
         if(!is_pass_true){
             return res.end();
         }
-        req.session.user = new_user._id;
+        req.session[USERID] = new_user._id;
         res.redirect('/');
         return res.end();
         
@@ -45,7 +46,7 @@ export const post_signin = async (req, res, next) => {
 }
 
 export const signout = async (req, res, next) => {
-    req.session.user = '';
+    req.session[USERID] = '';
     res.clearCookie(config.TOKEN);
     res.redirect('/auth/signin');
     res.end();
