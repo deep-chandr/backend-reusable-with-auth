@@ -1,8 +1,10 @@
+import { USERID } from "../common/variables";
+
 const checkAuth = (req, res, next) => {
-    if(req.session.user){
+    if( req.session[USERID] ){ 
         next();
     }else{
-        res.redirect('/auth/signin');
+        res.redirect('/auth/signout');
     }
 }
 
