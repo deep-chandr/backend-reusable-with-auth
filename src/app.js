@@ -1,8 +1,9 @@
-
 var express = require('express');
 var path = require('path');
 var logger = require('morgan');
 var bodyParser = require('body-parser');
+import expressSession from './middlewares/expressSession';
+import config from '../config';
 
 var indexRoute = require("./routes/index");
 var authRoute = require("./routes/auth");
@@ -10,24 +11,21 @@ var authRoute = require("./routes/auth");
 var app = express();
 
 
-
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
-
 app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended : true }));
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
-
+app.use(expressSession);
 
 app.use(logger("dev")); //for logging request in console
+
 app.use("/", indexRoute);
 app.use("/auth", authRoute);
 
 
 module.exports = app;
-
-
 
 
 

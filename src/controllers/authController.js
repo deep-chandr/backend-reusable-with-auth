@@ -1,44 +1,52 @@
-import * as errMsg from "../common/errMsg";
-import userModelServices from '../services/userModelServices';
-import crypticServices from '../services/crypticServices';
-import jwtServices from '../services/jwtServices';
 import config from '../../config';
+import * as errMsg from "../common/errMsg";
+import crypticServices from '../services/crypticServices';
+import userModelServices from '../services/userModelServices';
 
-export const register = async (req, res, next) => {
+export const get_register = (req, res, next) => res.render("register");
+export const get_signin = async (req, res, next) => res.render("signin");
+
+export const post_register = async (req, res, next) => {
     const {name, email, password, role } = req.body;
-    if(!name || !email || !password || !role) 
-        return res.json({ status : false, data : {}, msg : errMsg.INCOMPLETE_ARGUMENTS, err: errMsg.INCOMPLETE_ARGUMENTS });
+    if(!name || !email || !password || !role)  return res.end();
     try{
         const _user = {
             name, email, password, role
         };
         const new_user = await userModelServices.add(_user);
-        return res.json({status : true, data : {user : new_user}, msg : "User added successfully."});
+        res.redirect('/auth/signin');
+        return res.end();
     }catch(err){
-        return res.json({status : false, data : {}, msg : "Unable to add User.", err : err.toString() });
+        console.log('[err]',err);
+        res.redirect('/auth/register');
+        return res.end();
     }
 }
 
-export const signin = async (req, res, next) => {
+export const post_signin = async (req, res, next) => {
     const {email, password } = req.body;
     //validate mail everywhere
-    if( !email || !password ) 
-        return res.json({ status : false, data : {}, msg : errMsg.INCOMPLETE_ARGUMENTS, err: errMsg.INCOMPLETE_ARGUMENTS });
+    if( !email || !password ) return res.end();
     try{
         const new_user = await userModelServices.getByEmail({email});
         const is_pass_true = await crypticServices.verify({hash : new_user.password, password : password});
         if(!is_pass_true){
-            return res.json({status : false, data : {}, msg : "Wrong password", err : "Wrong password" });
+            return res.end();
         }
-        // get token
-        const token = await jwtServices.sign(new_user);
-        return res.json({status : true, data : {user : new_user, [config.TOKEN]: token }, msg : "Successfully logged in."});
+        req.session.user = new_user._id;
+        res.redirect('/');
+        return res.end();
         
     }catch(err){
-        return res.json({status : false, data : {}, msg : "Unable to signIn.", err : err.toString() });
+        console.log('[err]',err);
+        res.redirect('/auth/signin');
+        return res.end();
     }
 }
 
 export const signout = async (req, res, next) => {
-    res.json({status : true, data : {}, msg : "signout working"});
+    req.session.user = '';
+    res.clearCookie(config.TOKEN);
+    res.redirect('/auth/signin');
+    res.end();
 }
